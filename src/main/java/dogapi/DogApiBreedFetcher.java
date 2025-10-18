@@ -30,11 +30,13 @@ public class DogApiBreedFetcher implements BreedFetcher {
             throw new BreedNotFoundException("Breed not found");
         }
 
+        String pathBreed = breed.toLowerCase(java.util.Locale.ROOT);
+
         HttpUrl url = new HttpUrl.Builder()
                 .scheme("https")
                 .host("dog.ceo")
                 .addPathSegments("api/breed")
-                .addPathSegment(breed)
+                .addPathSegment(pathBreed)
                 .addPathSegment("list")
                 .build();
 
