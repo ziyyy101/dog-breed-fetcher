@@ -1,5 +1,6 @@
 package dogapi;
 
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -24,12 +25,53 @@ public class DogApiBreedFetcher implements BreedFetcher {
      * @throws BreedNotFoundException if the breed does not exist (or if the API call fails for any reason)
      */
     @Override
-    public List<String> getSubBreeds(String breed) {
-        // TODO Task 1: Complete this method based on its provided documentation
+    public List<String> getSubBreeds(String breed) throws BreedNotFoundException {
+        if (breed == null){
+            throw new BreedNotFoundException("Breed not found");
+        }
+
+        HttpUrl url = new HttpUrl.Builder()
+                .scheme("https")
+                .host("dog.ceo")
+                .addPathSegments("api/breed")
+                .addPathSegment(breed)
+                .addPathSegment("list")
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.body() == null) {
+                throw new BreedNotFoundException("Breed not found");
+            }
+
+            String jsonText = response.body().string();
+            JSONObject json = new JSONObject(jsonText);
+
+            String status = json.optString("status", "error");
+            if (!"success".equalsIgnoreCase(status)) {
+                throw new BreedNotFoundException("Breed not found");
+            }
+
+            JSONArray arr = json.getJSONArray("message");
+            List<String> subBreeds = new ArrayList<>(arr.length());
+            for (int i = 0; i < arr.length(); i++) {
+                subBreeds.add(arr.getString(i));
+            }
+
+            return subBreeds;
+
+        } catch (IOException | org.json.JSONException e) {
+            throw new BreedNotFoundException("Breed not found");
+        }
+
+            // TODO Task 1: Complete this method based on its provided documentation
         //      and the documentation for the dog.ceo API. You may find it helpful
         //      to refer to the examples of using OkHttpClient from the last lab,
         //      as well as the code for parsing JSON responses.
         // return statement included so that the starter code can compile and run.
-        return new ArrayList<>();
     }
 }
